@@ -1,74 +1,33 @@
-use std::io; // provides useful inputting features
-use std::cmp::Ordering; // provides the ordering enums
-use std::process; // for exiting
-use rand::Rng; // provides random number generation
+//use std::io; // provides useful inputting features
+//use std::cmp::Ordering; // provides the ordering enums
+//use std::process; // for exiting
+//use rand::Rng; // provides random number generation
 
-// entry function
+struct Constants {
+
+    // bitwise combinable constants
+    empty_tile: u8,
+    live_tile: u8,
+
+    // other constants
+    width: usize,
+    height: usize,
+
+}
+
 fn main() {
-    println!("Try to guess a secret number between 0 and 128");
+    const CONSTANTS : Constants = Constants {
+        empty_tile: 0b0000000,
+        live_tile:  0b0000001,
 
-    // variables immutable by default
-    // secret_number is a string
-    let secret_number: u8 = rand::thread_rng().gen_range(0, 128);
+        width: 100,
+        height: 100,
+    };
 
-    let mut guesses: u8 = 0;
-    loop {
-        guesses += 1;
+    let mut board = [[CONSTANTS.empty_tile; CONSTANTS.width]; CONSTANTS.height];
+}
 
-        let mut guess = String::new(); // makes a new mutable string
-
-        println!("Guess the number.");
-
-        // queries for response
-        // note it passes a reference, not the value itself
-        // checks for an error
-        match io::stdin().read_line(&mut guess) {
-            Ok(s) => s,
-            Err(e) => {
-                eprintln!("Error {}", e);
-                process::exit(-1);
-            }
-        };
-
-        let guess: &str = guess.trim();
-
-        // redefines guess
-        let gotten = guess.parse();
-        if guess == "quit" {
-            println!("Quitting!");
-            break;
-        }
-
-        let guess: u8 = match gotten {
-            Ok(num) => num,
-            Err(_) => {
-                println!("Actually guess a valid number.");
-                continue;
-            },
-        };
-        println!("You guessed {}", guess);
-
-        match guess.cmp(&secret_number) { // just pattern matching
-            // pattern        statement run if matched
-            Ordering::Less => {
-                println!("Too small! Try again.");
-            },
-            Ordering::Greater => {
-                println!("Too big! Try again.");
-            },
-            Ordering::Equal => {
-                println!("You win!");
-
-                // the brackets are necessary
-                if guesses != 1 {
-                    println!("You have used {} guesses to guess the answer", guesses);
-                } else {
-                    println!("You have used 1 guess to guess the answer");
-                }
-
-                break;
-            },
-        }
-
-    }
+// TODO fix the 2d array input
+fn update(mut board: &[[u8; 4]; 4]){
+    //
 }
