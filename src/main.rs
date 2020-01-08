@@ -2,14 +2,6 @@ use std::io; // provides useful inputting features
 use std::cmp::Ordering; // provides the ordering enums
 use rand::Rng; // provides random number generation
 
-enum TestEnum {
-
-    Less,
-    Grater,
-    Equal,
-
-}
-
 // entry function
 fn main() {
     println!("Try to guess a secret number between 0 and 128");
