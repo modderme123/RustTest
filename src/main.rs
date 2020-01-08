@@ -1,5 +1,6 @@
 use std::io; // provides useful inputting features
 use std::cmp::Ordering; // provides the ordering enums
+use std::process; // for exiting
 use rand::Rng; // provides random number generation
 
 // entry function
@@ -8,7 +9,7 @@ fn main() {
 
     // variables immutable by default
     // secret_number is a string
-    let secret_number = rand::thread_rng().gen_range(0, 128);
+    let secret_number: u8 = rand::thread_rng().gen_range(0, 128);
 
     let mut guesses: u8 = 0;
     loop {
@@ -20,10 +21,25 @@ fn main() {
 
         // queries for response
         // note it passes a reference, not the value itself
-        io::stdin().read_line(&mut guess).expect("Failed to read line."); // will crash the program if there's an err type returned
+        // checks for an error
+        match io::stdin().read_line(&mut guess) {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("Error {}", e);
+                process::exit(-1);
+            }
+        };
 
-        // redefins guess
-        let guess: u8 = match guess.trim().parse() {
+        let guess: &str = guess.trim();
+
+        // redefines guess
+        let gotten = guess.parse();
+        if guess == "quit" {
+            println!("Quitting!");
+            break;
+        }
+
+        let guess: u8 = match gotten {
             Ok(num) => num,
             Err(_) => {
                 println!("Actually guess a valid number.");
