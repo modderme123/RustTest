@@ -44,7 +44,7 @@ fn main() {
                 println!("You win!");
 
                 // the brackets are necessary
-                if (guesses != 1) {
+                if guesses != 1 {
                     println!("You have used {} guesses to guess the answer", guesses);
                 } else {
                     println!("You have used 1 guess to guess the answer");
