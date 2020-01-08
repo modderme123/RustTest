@@ -5,29 +5,27 @@
 
 struct Constants {
 
-    // bitwise combinable constants
-    empty_tile: u8,
-    live_tile: u8,
-
-    // other constants
     width: usize,
     height: usize,
 
 }
 
+const CONSTANTS : Constants = Constants {
+    width: 50,
+    height: 50,
+};
+
+enum Tiles {
+
+    Empty,
+    Live,
+
+}
+
 fn main() {
-    const CONSTANTS : Constants = Constants {
-        empty_tile: 0b0000000,
-        live_tile:  0b0000001,
-
-        width: 100,
-        height: 100,
-    };
-
     let mut board = [[CONSTANTS.empty_tile; CONSTANTS.width]; CONSTANTS.height];
 }
 
-// TODO fix the 2d array input
-fn update(mut board: &[[u8; 4]; 4]){
+fn update(board: &[[u8; CONSTANTS.width]; CONSTANTS.height]){
     //
 }
