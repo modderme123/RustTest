@@ -55,7 +55,7 @@ fn main() {
                 if (guesses != 1) {
                     println!("You have used {} guesses to guess the answer", guesses);
                 } else {
-                    println!("You have used 1 guesses to guess the answer");
+                    println!("You have used 1 guess to guess the answer");
                 }
 
                 break;
