@@ -15,6 +15,7 @@ struct Config {
     resizeable: bool,
     visible: bool,
     title: String,
+    always_on_top: bool,
 
     // TODO add more elements to the config
 
@@ -29,6 +30,7 @@ fn main(){
         resizeable: true,
         visible: true,
         title: "test title".to_string(),
+        always_on_top: true,
     });
 }
 
@@ -40,6 +42,7 @@ fn build_window(config: &Config) {
         .with_max_inner_size(dpi::PhysicalSize::new(config.max_width, config.max_height))
         .with_visible(config.visible)
         .with_resizable(config.resizeable)
+        .with_always_on_top(config.always_on_top)
         .with_title(&config.title); // TODO add more things here
     let window = builder.build(&event_loop).unwrap();
 
@@ -58,7 +61,6 @@ fn build_window(config: &Config) {
                 event: WindowEvent::CloseRequested,
                 ..
             } => {
-                println!("The close button was pressed; stopping");
                 *control_flow = ControlFlow::Exit
             },
             Event::MainEventsCleared => {
