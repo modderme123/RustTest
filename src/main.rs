@@ -1,3 +1,5 @@
+use std::env;
+
 struct Constants {
 
     width: usize,
