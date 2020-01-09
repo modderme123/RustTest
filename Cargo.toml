@@ -1,5 +1,5 @@
 [package]
-name = "RustTestCargo"
+name = "rust_test_cargo"
 version = "0.0.0"
 authors = ["Lonsdaleiter <lonsdaleiteproductions@gmail.com>"]
 edition = "2018"
