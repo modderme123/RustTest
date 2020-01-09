@@ -8,22 +8,21 @@ struct Constants {
     width: usize,
     height: usize,
 
+    dead: u8,
+    live: u8,
+
 }
 
 const CONSTANTS : Constants = Constants {
     width: 50,
     height: 50,
+
+    dead: 0b0000000,
+    live: 0b0000001,
 };
 
-enum Tiles {
-
-    Empty,
-    Live,
-
-}
-
 fn main() {
-    let mut board = [[CONSTANTS.empty_tile; CONSTANTS.width]; CONSTANTS.height];
+    let mut board = [[CONSTANTS.dead; CONSTANTS.width]; CONSTANTS.height];
 }
 
 fn update(board: &[[u8; CONSTANTS.width]; CONSTANTS.height]){
