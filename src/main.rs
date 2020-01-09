@@ -22,7 +22,14 @@ const CONSTANTS : Constants = Constants {
 };
 
 fn main() {
-    let mut board = [[CONSTANTS.dead; CONSTANTS.width]; CONSTANTS.height];
+    let mut board: [[u8; CONSTANTS.width]; CONSTANTS.height]=
+        [[CONSTANTS.dead; CONSTANTS.width]; CONSTANTS.height];
+
+//    loop {
+//        update(&board);
+//
+//        // print the board
+//    }
 }
 
 fn update(board: &[[u8; CONSTANTS.width]; CONSTANTS.height]){
