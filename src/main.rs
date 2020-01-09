@@ -23,7 +23,7 @@ fn build_window() -> Window {
         .with_min_inner_size(dpi::PhysicalSize::new(800, 600))
         .with_max_inner_size(dpi::PhysicalSize::new(800, 600))
         .with_visible(true);
-    let window = builder.build(&event_loop);
+    let window = builder.build(&event_loop).unwrap();
 
     return Window{};
 }
