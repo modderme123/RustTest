@@ -15,8 +15,10 @@ struct Config {
     max_height: u16,
     resizeable: bool,
     visible: bool,
-    titlebar: bol,
+    titlebar: bool,
     title: String,
+
+    // TODO add more elements to the config
 
 }
 
@@ -33,6 +35,6 @@ fn build_window(config: &Config) {
         .with_visible(config.visible)
         .with_resizable(config.resizeable)
         .with_titlebar_hidden(config.titlebar)
-        .with_title(config.title.into()); // TODO add more things here
+        .with_title(&config.title); // TODO add more things here
     let window = builder.build(&event_loop).unwrap();
 }
