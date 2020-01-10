@@ -30,7 +30,7 @@ fn main(){
         resizeable: true,
         visible: true,
         title: "test title".to_string(),
-        always_on_top: true,
+        always_on_top: false,
     });
 }
 
@@ -46,7 +46,7 @@ fn build_window(config: &Config) {
         .with_title(&config.title); // TODO add more things here
     let window = builder.build(&event_loop).unwrap();
 
-    event_loop.run(move | event, _, control_flow| {
+    event_loop.run(move | event, _, control_flow | {
         // ControlFlow::Poll continuously runs the event loop, even if the OS hasn't
         // dispatched any events. This is ideal for games and similar applications.
         *control_flow = ControlFlow::Poll;
