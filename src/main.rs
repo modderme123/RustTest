@@ -6,6 +6,15 @@ use winit::{
     window::Window,
     window::WindowBuilder,
 };
+use wgpu::{
+    Surface,
+    Adapter,
+    ShaderModule,
+    BindGroupLayout,
+    PipelineLayout,
+    RenderPipeline,
+    SwapChain
+};
 
 struct WindowConfig {
     min_width: u16,
@@ -17,6 +26,12 @@ struct WindowConfig {
     title: String,
     always_on_top: bool,
     // TODO add more elements to the config
+}
+
+struct ShaderFile {
+
+    //
+
 }
 
 fn main() {
@@ -34,11 +49,10 @@ fn main() {
             always_on_top: false,
         },
     );
-    let size = window.inner_size();
 
-    let surface = wgpu::Surface::create(&window);
-
-    let adapter = wgpu::Adapter::request(&wgpu::RequestAdapterOptions {
+    let size: dpi::PhysicalSize<u32> = window.inner_size();
+    let surface: Surface = wgpu::Surface::create(&window);
+    let adapter: Adapter = wgpu::Adapter::request(&wgpu::RequestAdapterOptions {
         power_preference: wgpu::PowerPreference::Default,
         backends: wgpu::BackendBit::PRIMARY,
     }).unwrap();
@@ -51,24 +65,24 @@ fn main() {
     });
 
     let vs = include_bytes!("shader.vert.spv");
-    let vs_module =
+    let vs_module: ShaderModule =
         device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&vs[..])).unwrap());
 
     let fs = include_bytes!("shader.frag.spv");
-    let fs_module =
+    let fs_module: ShaderModule =
         device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&fs[..])).unwrap());
 
-    let bind_group_layout =
+    let bind_group_layout: BindGroupLayout =
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { bindings: &[] });
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         layout: &bind_group_layout,
         bindings: &[],
     });
-    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+    let pipeline_layout: PipelineLayout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
         bind_group_layouts: &[&bind_group_layout],
     });
 
-    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+    let render_pipeline: RenderPipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
         layout: &pipeline_layout,
         vertex_stage: wgpu::ProgrammableStageDescriptor {
             module: &vs_module,
@@ -100,7 +114,7 @@ fn main() {
         alpha_to_coverage_enabled: false,
     });
 
-    let mut swap_chain = device.create_swap_chain(
+    let mut swap_chain: SwapChain = device.create_swap_chain(
         &surface,
         &wgpu::SwapChainDescriptor {
             usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
@@ -108,6 +122,7 @@ fn main() {
             width: size.width as u32,
             height: size.height as u32,
             present_mode: wgpu::PresentMode::Vsync,
+            // HEY: THIS IS WHERE VSYNC IS ENABLED TODO REMEMBER THAT
         },
     );
     event_loop.run(move |event, _, control_flow| {
@@ -159,14 +174,15 @@ fn main() {
 
 // use https://docs.rs/winit/0.20.0/winit/
 fn build_window(event_loop: &EventLoop<()>, config: &WindowConfig) -> Window {
-    let builder = WindowBuilder::new()
+    let window_builder: WindowBuilder = WindowBuilder::new()
         .with_min_inner_size(dpi::PhysicalSize::new(config.min_width, config.min_height))
         .with_max_inner_size(dpi::PhysicalSize::new(config.max_width, config.max_height))
         .with_visible(config.visible)
         .with_resizable(config.resizeable)
         .with_always_on_top(config.always_on_top)
         .with_title(&config.title); // TODO add more things here
-    let window = builder.build(event_loop).unwrap();
+
+    let window: Window = window_builder.build(event_loop).unwrap();
 
     return window;
 }
