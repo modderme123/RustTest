@@ -7,7 +7,7 @@ use winit::{
     dpi,
 };
 
-struct Config {
+struct WindowConfig {
 
     min_width: u16,
     min_height: u16,
@@ -24,7 +24,7 @@ struct Config {
 
 fn main(){
     let event_loop = EventLoop::new();
-    let window: Window = build_window(&event_loop, &Config{
+    let window: Window = build_window(&event_loop, &WindowConfig {
         min_width: 600,
         min_height: 600,
         max_width: 2000,
@@ -69,7 +69,7 @@ fn main(){
 }
 
 // use https://docs.rs/winit/0.20.0/winit/
-fn build_window(event_loop: &EventLoop<()>, config: &Config) -> Window {
+fn build_window(event_loop: &EventLoop<()>, config: &WindowConfig) -> Window {
     let builder = WindowBuilder::new()
         .with_min_inner_size(dpi::PhysicalSize::new(config.min_width, config.min_height))
         .with_max_inner_size(dpi::PhysicalSize::new(config.max_width, config.max_height))
