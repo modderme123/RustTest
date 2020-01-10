@@ -3,6 +3,7 @@ use winit::{
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::WindowBuilder,
+    window::Window,
     dpi,
 };
 
@@ -22,7 +23,8 @@ struct Config {
 }
 
 fn main(){
-    build_window(&Config{
+    let event_loop = EventLoop::new();
+    let window: Window = build_window(&event_loop, &Config{
         min_width: 600,
         min_height: 600,
         max_width: 2000,
@@ -32,19 +34,6 @@ fn main(){
         title: "test title".to_string(),
         always_on_top: false,
     });
-}
-
-// use https://docs.rs/winit/0.20.0/winit/
-fn build_window(config: &Config) {
-    let event_loop = EventLoop::new();
-    let builder = WindowBuilder::new()
-        .with_min_inner_size(dpi::PhysicalSize::new(config.min_width, config.min_height))
-        .with_max_inner_size(dpi::PhysicalSize::new(config.max_width, config.max_height))
-        .with_visible(config.visible)
-        .with_resizable(config.resizeable)
-        .with_always_on_top(config.always_on_top)
-        .with_title(&config.title); // TODO add more things here
-    let window = builder.build(&event_loop).unwrap();
 
     event_loop.run(move | event, _, control_flow | {
         // ControlFlow::Poll continuously runs the event loop, even if the OS hasn't
@@ -77,4 +66,18 @@ fn build_window(config: &Config) {
             _ => ()
         }
     });
+}
+
+// use https://docs.rs/winit/0.20.0/winit/
+fn build_window(event_loop: &EventLoop<()>, config: &Config) -> Window {
+    let builder = WindowBuilder::new()
+        .with_min_inner_size(dpi::PhysicalSize::new(config.min_width, config.min_height))
+        .with_max_inner_size(dpi::PhysicalSize::new(config.max_width, config.max_height))
+        .with_visible(config.visible)
+        .with_resizable(config.resizeable)
+        .with_always_on_top(config.always_on_top)
+        .with_title(&config.title); // TODO add more things here
+    let window = builder.build(event_loop).unwrap();
+
+    return window;
 }
