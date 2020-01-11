@@ -30,8 +30,8 @@ fn main() {
     let window: Window = build_window(
         &event_loop,
         &WindowConfig {
-            min_width: 600,
-            min_height: 600,
+            min_width: 1,
+            min_height: 1,
             max_width: 2000,
             max_height: 2000,
             resizeable: true,
