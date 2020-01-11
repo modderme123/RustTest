@@ -6,6 +6,8 @@ use winit::{
     window::Window,
     window::WindowBuilder,
 };
+use shaderc;
+use std::fs;
 
 struct WindowConfig {
     min_width: u16,
@@ -20,6 +22,9 @@ struct WindowConfig {
 }
 
 fn main() {
+    build_shader("src/shader.vert");
+    build_shader("src/shader.frag");
+
     let event_loop = EventLoop::new();
     let window: Window = build_window(
         &event_loop,
@@ -172,4 +177,30 @@ fn build_window(event_loop: &EventLoop<()>, config: &WindowConfig) -> Window {
     let window: Window = window_builder.build(event_loop).unwrap();
 
     return window;
+}
+
+// SHADER BUILDING
+
+// only needs to happen once
+fn build_shader(shader: &str){
+//    let source: String = fs::read_to_string(shader).unwrap();
+//
+//    let mut compiler = shaderc::Compiler::new().unwrap();
+//    let mut options = shaderc::CompileOptions::new().unwrap();
+//    options.add_macro_definition("EP", Some("main"));
+//    let binary_result = compiler.compile_into_spirv(
+//        source.as_str(), shaderc::ShaderKind::Vertex,
+//        shader, "main", Some(&options)).unwrap();
+//
+//    assert_eq!(Some(&0x07230203), binary_result.as_binary().first());
+//
+//    let text_result = compiler.compile_into_spirv_assembly(
+//        source.as_str(), shaderc::ShaderKind::Vertex,
+//        shader, "main", Some(&options)).unwrap();
+//
+//    assert!(text_result.as_text().starts_with("; SPIR-V\n"));
+//
+//    fs::write(format!("{}{}", shader, ".spv"), text_result.as_text().as_bytes());
+//
+//    println!("{}", text_result.as_text());
 }
