@@ -1,3 +1,4 @@
+use png;
 use wgpu;
 use winit::{
     dpi,
@@ -6,9 +7,6 @@ use winit::{
     window::Window,
     window::WindowBuilder,
 };
-//use shaderc;
-//use std::fs;
-//use std::io::Write;
 
 struct WindowConfig {
     min_width: u16,
@@ -19,32 +17,32 @@ struct WindowConfig {
     visible: bool,
     title: String,
     always_on_top: bool,
-    // TODO add more elements to the config
 }
 
 fn main() {
     let event_loop = EventLoop::new();
-    let window: Window = build_window(
+    let window = build_window(
         &event_loop,
         &WindowConfig {
-            min_width: 1,
-            min_height: 1,
-            max_width: 2000,
-            max_height: 2000,
-            resizeable: true,
+            min_width: 800,
+            min_height: 600,
+            max_width: 800,
+            max_height: 600,
+            resizeable: false,
             visible: true,
             title: "test title".to_string(),
             always_on_top: false,
         },
     );
+    let size = window.inner_size();
 
-    let size: dpi::PhysicalSize<u32> = window.inner_size();
-    let surface: wgpu::Surface = wgpu::Surface::create(&window);
-    let adapter: wgpu::Adapter = wgpu::Adapter::request(&wgpu::RequestAdapterOptions {
+    let surface = wgpu::Surface::create(&window);
+
+    let adapter = wgpu::Adapter::request(&wgpu::RequestAdapterOptions {
         power_preference: wgpu::PowerPreference::Default,
         backends: wgpu::BackendBit::PRIMARY,
-    }).unwrap();
-
+    })
+    .unwrap();
     let (device, mut queue) = adapter.request_device(&wgpu::DeviceDescriptor {
         extensions: wgpu::Extensions {
             anisotropic_filtering: false,
@@ -52,59 +50,152 @@ fn main() {
         limits: wgpu::Limits::default(),
     });
 
+    let mut init_encoder =
+        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { todo: 0 });
+
+    let bind_group_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+        bindings: &[
+            wgpu::BindGroupLayoutBinding {
+                binding: 0,
+                visibility: wgpu::ShaderStage::FRAGMENT,
+                ty: wgpu::BindingType::SampledTexture {
+                    multisampled: false,
+                    dimension: wgpu::TextureViewDimension::D2,
+                },
+            },
+            wgpu::BindGroupLayoutBinding {
+                binding: 1,
+                visibility: wgpu::ShaderStage::FRAGMENT,
+                ty: wgpu::BindingType::Sampler,
+            },
+        ],
+    });
+
+    let sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+        address_mode_u: wgpu::AddressMode::Repeat,
+        address_mode_v: wgpu::AddressMode::Repeat,
+        address_mode_w: wgpu::AddressMode::Repeat,
+        mag_filter: wgpu::FilterMode::Nearest,
+        min_filter: wgpu::FilterMode::Linear,
+        mipmap_filter: wgpu::FilterMode::Nearest,
+        lod_min_clamp: -100.0,
+        lod_max_clamp: 100.0,
+        compare_function: wgpu::CompareFunction::Always,
+    });
+
+    let paths = &include_bytes!("images/posx.png")[..];
+
+    let (image, image_width, image_height) = {
+        let png = std::io::Cursor::new(paths);
+        let decoder = png::Decoder::new(png);
+        let (info, mut reader) = decoder.read_info().expect("can read info");
+        let mut buf = vec![0; info.buffer_size()];
+        reader.next_frame(&mut buf).expect("can read png frame");
+        (buf, info.width, info.height)
+    };
+
+    let texture_extent = wgpu::Extent3d {
+        width: image_width,
+        height: image_height,
+        depth: 1,
+    };
+
+    let texture = device.create_texture(&wgpu::TextureDescriptor {
+        size: texture_extent,
+        array_layer_count: 1,
+        mip_level_count: 1,
+        sample_count: 1,
+        dimension: wgpu::TextureDimension::D2,
+        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+        usage: wgpu::TextureUsage::SAMPLED
+            | wgpu::TextureUsage::OUTPUT_ATTACHMENT
+            | wgpu::TextureUsage::COPY_DST,
+    });
+
+    let image_buf = device
+        .create_buffer_mapped(
+            image.len(),
+            wgpu::BufferUsage::COPY_SRC | wgpu::BufferUsage::MAP_READ,
+        )
+        .fill_from_slice(&image);
+
+    init_encoder.copy_buffer_to_texture(
+        wgpu::BufferCopyView {
+            buffer: &image_buf,
+            offset: 0,
+            row_pitch: 4 * image_width,
+            image_height,
+        },
+        wgpu::TextureCopyView {
+            texture: &texture,
+            mip_level: 0,
+            array_layer: 0,
+            origin: wgpu::Origin3d {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        },
+        texture_extent,
+    );
+    let texture_view = texture.create_default_view();
+    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
+        layout: &bind_group_layout,
+        bindings: &[
+            wgpu::Binding {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(&texture_view),
+            },
+            wgpu::Binding {
+                binding: 1,
+                resource: wgpu::BindingResource::Sampler(&sampler),
+            },
+        ],
+    });
+    let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+        bind_group_layouts: &[&bind_group_layout],
+    });
+
     let vs = include_bytes!("shader.vert.spv");
-    let vs_module: wgpu::ShaderModule =
+    let vs_module =
         device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&vs[..])).unwrap());
 
     let fs = include_bytes!("shader.frag.spv");
-    let fs_module: wgpu::ShaderModule =
+    let fs_module =
         device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&fs[..])).unwrap());
 
-    let bind_group_layout: wgpu::BindGroupLayout =
-        device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { bindings: &[] });
-    let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
-        layout: &bind_group_layout,
-        bindings: &[],
+    let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+        layout: &pipeline_layout,
+        vertex_stage: wgpu::ProgrammableStageDescriptor {
+            module: &vs_module,
+            entry_point: "main",
+        },
+        fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
+            module: &fs_module,
+            entry_point: "main",
+        }),
+        rasterization_state: Some(wgpu::RasterizationStateDescriptor {
+            front_face: wgpu::FrontFace::Ccw,
+            cull_mode: wgpu::CullMode::None,
+            depth_bias: 0,
+            depth_bias_slope_scale: 0.0,
+            depth_bias_clamp: 0.0,
+        }),
+        primitive_topology: wgpu::PrimitiveTopology::TriangleStrip,
+        color_states: &[wgpu::ColorStateDescriptor {
+            format: wgpu::TextureFormat::Bgra8UnormSrgb,
+            color_blend: wgpu::BlendDescriptor::REPLACE,
+            alpha_blend: wgpu::BlendDescriptor::REPLACE,
+            write_mask: wgpu::ColorWrite::ALL,
+        }],
+        depth_stencil_state: None,
+        index_format: wgpu::IndexFormat::Uint16,
+        vertex_buffers: &[],
+        sample_count: 1,
+        sample_mask: !0,
+        alpha_to_coverage_enabled: false,
     });
-    let pipeline_layout: wgpu::PipelineLayout =
-        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            bind_group_layouts: &[&bind_group_layout],
-    });
-
-    let render_pipeline: wgpu::RenderPipeline =
-        device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            layout: &pipeline_layout,
-            vertex_stage: wgpu::ProgrammableStageDescriptor {
-                module: &vs_module,
-                entry_point: "main",
-            },
-            fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
-                module: &fs_module,
-                entry_point: "main",
-            }),
-            rasterization_state: Some(wgpu::RasterizationStateDescriptor {
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: wgpu::CullMode::None,
-                depth_bias: 0,
-                depth_bias_slope_scale: 0.0,
-                depth_bias_clamp: 0.0,
-            }),
-            primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-            color_states: &[wgpu::ColorStateDescriptor {
-                format: wgpu::TextureFormat::Bgra8UnormSrgb,
-                color_blend: wgpu::BlendDescriptor::REPLACE,
-                alpha_blend: wgpu::BlendDescriptor::REPLACE,
-                write_mask: wgpu::ColorWrite::ALL,
-            }],
-            depth_stencil_state: None,
-            index_format: wgpu::IndexFormat::Uint16,
-            vertex_buffers: &[],
-            sample_count: 1,
-            sample_mask: !0,
-            alpha_to_coverage_enabled: false,
-    });
-
-    let mut swap_chain: wgpu::SwapChain = device.create_swap_chain(
+    let mut swap_chain = device.create_swap_chain(
         &surface,
         &wgpu::SwapChainDescriptor {
             usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
@@ -112,9 +203,11 @@ fn main() {
             width: size.width as u32,
             height: size.height as u32,
             present_mode: wgpu::PresentMode::Vsync,
-            // HEY: THIS IS WHERE VSYNC IS ENABLED TODO REMEMBER THAT
         },
     );
+
+    queue.submit(&[init_encoder.finish()]);
+
     event_loop.run(move |event, _, control_flow| {
         // ControlFlow::Poll continuously runs the event loop, even if the OS hasn't
         // dispatched any events. This is ideal for games and similar applications.
@@ -146,13 +239,13 @@ fn main() {
                             resolve_target: None,
                             load_op: wgpu::LoadOp::Clear,
                             store_op: wgpu::StoreOp::Store,
-                            clear_color: wgpu::Color::GREEN,
+                            clear_color: wgpu::Color::BLACK,
                         }],
                         depth_stencil_attachment: None,
                     });
                     rpass.set_pipeline(&render_pipeline);
                     rpass.set_bind_group(0, &bind_group, &[]);
-                    rpass.draw(0..3, 0..1);
+                    rpass.draw(0..4, 0..1);
                 }
 
                 queue.submit(&[encoder.finish()]);
@@ -164,15 +257,13 @@ fn main() {
 
 // use https://docs.rs/winit/0.20.0/winit/
 fn build_window(event_loop: &EventLoop<()>, config: &WindowConfig) -> Window {
-    let window_builder: WindowBuilder = WindowBuilder::new()
+    let builder = WindowBuilder::new()
         .with_min_inner_size(dpi::PhysicalSize::new(config.min_width, config.min_height))
         .with_max_inner_size(dpi::PhysicalSize::new(config.max_width, config.max_height))
         .with_visible(config.visible)
         .with_resizable(config.resizeable)
         .with_always_on_top(config.always_on_top)
-        .with_title(&config.title); // TODO add more things here
+        .with_title(&config.title);
 
-    let window: Window = window_builder.build(event_loop).unwrap();
-
-    return window;
+    builder.build(event_loop).unwrap()
 }
