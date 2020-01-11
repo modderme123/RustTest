@@ -23,8 +23,6 @@ struct WindowConfig {
 }
 
 fn main() {
-    build_shaders();
-
     let event_loop = EventLoop::new();
     let window: Window = build_window(
         &event_loop,
