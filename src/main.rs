@@ -19,12 +19,6 @@ struct WindowConfig {
     // TODO add more elements to the config
 }
 
-struct ShaderFile {
-
-    //
-
-}
-
 fn main() {
     let event_loop = EventLoop::new();
     let window: Window = build_window(
