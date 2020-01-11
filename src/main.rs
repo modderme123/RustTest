@@ -6,15 +6,6 @@ use winit::{
     window::Window,
     window::WindowBuilder,
 };
-use wgpu::{
-    Surface,
-    Adapter,
-    ShaderModule,
-    BindGroupLayout,
-    PipelineLayout,
-    RenderPipeline,
-    SwapChain
-};
 
 struct WindowConfig {
     min_width: u16,
@@ -51,8 +42,8 @@ fn main() {
     );
 
     let size: dpi::PhysicalSize<u32> = window.inner_size();
-    let surface: Surface = wgpu::Surface::create(&window);
-    let adapter: Adapter = wgpu::Adapter::request(&wgpu::RequestAdapterOptions {
+    let surface: wgpu::Surface = wgpu::Surface::create(&window);
+    let adapter: wgpu::Adapter = wgpu::Adapter::request(&wgpu::RequestAdapterOptions {
         power_preference: wgpu::PowerPreference::Default,
         backends: wgpu::BackendBit::PRIMARY,
     }).unwrap();
@@ -65,56 +56,58 @@ fn main() {
     });
 
     let vs = include_bytes!("shader.vert.spv");
-    let vs_module: ShaderModule =
+    let vs_module: wgpu::ShaderModule =
         device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&vs[..])).unwrap());
 
     let fs = include_bytes!("shader.frag.spv");
-    let fs_module: ShaderModule =
+    let fs_module: wgpu::ShaderModule =
         device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&fs[..])).unwrap());
 
-    let bind_group_layout: BindGroupLayout =
+    let bind_group_layout: wgpu::BindGroupLayout =
         device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor { bindings: &[] });
     let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
         layout: &bind_group_layout,
         bindings: &[],
     });
-    let pipeline_layout: PipelineLayout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-        bind_group_layouts: &[&bind_group_layout],
+    let pipeline_layout: wgpu::PipelineLayout =
+        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts: &[&bind_group_layout],
     });
 
-    let render_pipeline: RenderPipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-        layout: &pipeline_layout,
-        vertex_stage: wgpu::ProgrammableStageDescriptor {
-            module: &vs_module,
-            entry_point: "main",
-        },
-        fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
-            module: &fs_module,
-            entry_point: "main",
-        }),
-        rasterization_state: Some(wgpu::RasterizationStateDescriptor {
-            front_face: wgpu::FrontFace::Ccw,
-            cull_mode: wgpu::CullMode::None,
-            depth_bias: 0,
-            depth_bias_slope_scale: 0.0,
-            depth_bias_clamp: 0.0,
-        }),
-        primitive_topology: wgpu::PrimitiveTopology::TriangleList,
-        color_states: &[wgpu::ColorStateDescriptor {
-            format: wgpu::TextureFormat::Bgra8UnormSrgb,
-            color_blend: wgpu::BlendDescriptor::REPLACE,
-            alpha_blend: wgpu::BlendDescriptor::REPLACE,
-            write_mask: wgpu::ColorWrite::ALL,
-        }],
-        depth_stencil_state: None,
-        index_format: wgpu::IndexFormat::Uint16,
-        vertex_buffers: &[],
-        sample_count: 1,
-        sample_mask: !0,
-        alpha_to_coverage_enabled: false,
+    let render_pipeline: wgpu::RenderPipeline =
+        device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            layout: &pipeline_layout,
+            vertex_stage: wgpu::ProgrammableStageDescriptor {
+                module: &vs_module,
+                entry_point: "main",
+            },
+            fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
+                module: &fs_module,
+                entry_point: "main",
+            }),
+            rasterization_state: Some(wgpu::RasterizationStateDescriptor {
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: wgpu::CullMode::None,
+                depth_bias: 0,
+                depth_bias_slope_scale: 0.0,
+                depth_bias_clamp: 0.0,
+            }),
+            primitive_topology: wgpu::PrimitiveTopology::TriangleList,
+            color_states: &[wgpu::ColorStateDescriptor {
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                color_blend: wgpu::BlendDescriptor::REPLACE,
+                alpha_blend: wgpu::BlendDescriptor::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }],
+            depth_stencil_state: None,
+            index_format: wgpu::IndexFormat::Uint16,
+            vertex_buffers: &[],
+            sample_count: 1,
+            sample_mask: !0,
+            alpha_to_coverage_enabled: false,
     });
 
-    let mut swap_chain: SwapChain = device.create_swap_chain(
+    let mut swap_chain: wgpu::SwapChain = device.create_swap_chain(
         &surface,
         &wgpu::SwapChainDescriptor {
             usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
