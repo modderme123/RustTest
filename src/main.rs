@@ -1,4 +1,6 @@
-use png;
+use rand;
+use rand::distributions::{Bernoulli, Distribution};
+use std::iter;
 use wgpu;
 use winit::{
     dpi,
@@ -17,6 +19,20 @@ struct WindowConfig {
     always_on_top: bool,
 }
 
+fn create_texels(width: u32, height: u32) -> Vec<u8> {
+    let mut rng = rand::thread_rng();
+    let d = Bernoulli::new(0.1);
+    (0..width * height)
+        .flat_map(|_| {
+            let on = d.sample(&mut rng);
+            iter::once(0u8)
+                .chain(iter::once(if on { 0xFF } else { 0 }))
+                .chain(iter::once(0))
+                .chain(iter::once(1))
+        })
+        .collect()
+}
+
 fn main() {
     let event_loop = EventLoop::new();
     let window = build_window(
@@ -24,7 +40,7 @@ fn main() {
         &WindowConfig {
             width: 800,
             height: 600,
-            resizeable: true,
+            resizeable: false,
             visible: true,
             title: "test title".to_string(),
             always_on_top: false,
@@ -79,16 +95,7 @@ fn main() {
         compare_function: wgpu::CompareFunction::Always,
     });
 
-    let paths = &include_bytes!("images/borealis.png")[..];
-
-    let (image, image_width, image_height) = {
-        let png = std::io::Cursor::new(paths);
-        let decoder = png::Decoder::new(png);
-        let (info, mut reader) = decoder.read_info().expect("can read info");
-        let mut buf = vec![0; info.buffer_size()];
-        reader.next_frame(&mut buf).expect("can read png frame");
-        (buf, info.width, info.height)
-    };
+    let image = create_texels(size.width, size.height);
 
     let texture_extent = wgpu::Extent3d {
         width: size.width,
@@ -116,8 +123,8 @@ fn main() {
         wgpu::BufferCopyView {
             buffer: &image_buf,
             offset: 0,
-            row_pitch: 4 * image_width,
-            image_height,
+            row_pitch: 4 * size.width,
+            image_height: size.height,
         },
         wgpu::TextureCopyView {
             texture: &texture,
@@ -258,6 +265,12 @@ fn main() {
                 event: WindowEvent::CloseRequested,
                 ..
             } => *control_flow = ControlFlow::Exit,
+            Event::WindowEvent {
+                event: WindowEvent::CursorMoved { position: pos, .. },
+                ..
+            } => {
+                println!("mouse moved: ({}, {})", pos.x, pos.y);
+            }
             Event::MainEventsCleared => {
                 // Application update code.
                 // Queue a RedrawRequested event.
