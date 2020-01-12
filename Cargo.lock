@@ -760,7 +760,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "rust_test_cargo"
+name = "rust_test"
 version = "0.0.0"
 dependencies = [
  "png 0.15.3 (registry+https://github.com/rust-lang/crates.io-index)",
