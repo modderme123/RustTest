@@ -6,22 +6,12 @@ use winit::{
     dpi,
     event::{Event, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
-    window::Window,
     window::WindowBuilder,
 };
 
-struct WindowConfig {
-    width: u16,
-    height: u16,
-    resizeable: bool,
-    visible: bool,
-    title: String,
-    always_on_top: bool,
-}
-
 fn create_texels(width: u32, height: u32) -> Vec<u8> {
     let mut rng = rand::thread_rng();
-    let d = Bernoulli::new(0.1);
+    let d = Bernoulli::new(0.1).unwrap();
     (0..width * height)
         .flat_map(|_| {
             let on = d.sample(&mut rng);
@@ -35,17 +25,16 @@ fn create_texels(width: u32, height: u32) -> Vec<u8> {
 
 fn main() {
     let event_loop = EventLoop::new();
-    let window = build_window(
-        &event_loop,
-        &WindowConfig {
-            width: 800,
-            height: 600,
-            resizeable: false,
-            visible: true,
-            title: "test title".to_string(),
-            always_on_top: false,
-        },
-    );
+
+    let window = WindowBuilder::new()
+        .with_inner_size(dpi::PhysicalSize::new(800, 600))
+        .with_visible(true)
+        .with_resizable(false)
+        .with_always_on_top(false)
+        .with_title("test title")
+        .build(&event_loop)
+        .unwrap();
+
     let size = window.inner_size();
 
     let surface = wgpu::Surface::create(&window);
@@ -323,16 +312,4 @@ fn main() {
             _ => (),
         }
     });
-}
-
-// use https://docs.rs/winit/0.20.0/winit/
-fn build_window(event_loop: &EventLoop<()>, config: &WindowConfig) -> Window {
-    let builder = WindowBuilder::new()
-        .with_inner_size(dpi::PhysicalSize::new(config.width, config.height))
-        .with_visible(config.visible)
-        .with_resizable(config.resizeable)
-        .with_always_on_top(config.always_on_top)
-        .with_title(&config.title);
-
-    builder.build(event_loop).unwrap()
 }
